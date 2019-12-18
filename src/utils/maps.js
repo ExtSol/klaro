@@ -1,10 +1,10 @@
 export function convertToMap(d){
     const dm = new Map([])
-    for(var key of Object.keys(d)){
+    for(const key of Object.keys(d)){
         const value = d[key]
-        if (!(typeof(key) == 'string'))
+        if (!(typeof(key) === 'string'))
             continue
-        if (typeof(value) == 'string'){
+        if (typeof(value) === 'string'){
             dm.set(key, value)
         }
         else{
@@ -23,20 +23,20 @@ export function update(d, ed, overwrite, clone){
             update(map, value, true, false)
             d.set(key, map)
         } else
-            d.set(key, value)    
+            d.set(key, value)
     }
 
     if (!(ed instanceof Map) || !(d instanceof Map))
-        throw "Parameters are not maps!"
+        throw new Error("Parameters are not maps!")
     if (overwrite === undefined)
         overwrite = true
     if (clone === undefined)
         clone = false
     if (clone)
         d = new d.constructor(d)
-    for(let key of ed.keys()){
-        let value = ed.get(key)
-        let dvalue = d.get(key)
+    for(const key of ed.keys()){
+        const value = ed.get(key)
+        const dvalue = d.get(key)
         if (!d.has(key)){
             assign(d, key, value)
         }

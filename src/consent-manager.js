@@ -27,7 +27,7 @@ export default class ConsentManager {
         if (this.watchers.has(watcher))
             this.watchers.delete(watcher)
     }
-    
+
     notify(name, data){
         this.watchers.forEach((watcher) => {
             watcher.update(this, name, data)
@@ -35,7 +35,7 @@ export default class ConsentManager {
     }
 
     getApp(name){
-        const matchingApps = this.config.apps.filter((app)=>{return app.name == name})
+        const matchingApps = this.config.apps.filter(app=>app.name === name)
         if (matchingApps.length > 0)
             return matchingApps[0]
         return undefined
@@ -52,7 +52,7 @@ export default class ConsentManager {
 
     get defaultConsents(){
         const consents = {}
-        for(var i=0;i<this.config.apps.length;i++){
+        for(let i=0;i<this.config.apps.length;i++){
             const app = this.config.apps[i]
             consents[app.name] = this.getDefaultConsent(app)
         }
@@ -91,12 +91,12 @@ export default class ConsentManager {
         let complete = true
         const apps = new Set(this.config.apps.map((app)=>{return app.name}))
         const consents = new Set(Object.keys(this.consents))
-        for(var key of Object.keys(this.consents)){
+        for(const key of Object.keys(this.consents)){
             if (!apps.has(key)){
                 delete this.consents[key]
             }
         }
-        for(var app of this.config.apps){
+        for(const app of this.config.apps){
             if (!consents.has(app.name)){
                 this.consents[app.name] = this.getDefaultConsent(app)
                 complete = false
@@ -121,7 +121,7 @@ export default class ConsentManager {
         this.saveConsents()
         this.applyConsents()
     }
-    
+
     saveConsents(){
         if (this.consents === null)
             deleteCookie(this.cookieName)
@@ -132,7 +132,7 @@ export default class ConsentManager {
     }
 
     applyConsents(){
-        for(var i=0;i<this.config.apps.length;i++){
+        for(let i=0;i<this.config.apps.length;i++){
             const app = this.config.apps[i]
             const state = this.states[app.name]
             const optOut = (app.optOut !== undefined ? app.optOut : (this.config.optOut || false))
@@ -160,22 +160,22 @@ export default class ConsentManager {
         }
 
         const elements = document.querySelectorAll("[data-name='"+app.name+"']")
-        for(var i=0;i<elements.length;i++){
+        for(let i=0;i<elements.length;i++){
             const element = elements[i]
 
             const parent = element.parentElement
             const {dataset} = element
-            const {type, name} = dataset
+            const {type} = dataset
             const attrs = ['href', 'src']
 
             //if no consent was given we disable this tracker
             //we remove and add it again to trigger a re-execution
 
-            if (element.tagName == 'SCRIPT'){
+            if (element.tagName === 'SCRIPT'){
                 // we create a new script instead of updating the node in
                 // place, as the script won't start correctly otherwise
                 const newElement = document.createElement('script')
-                for(var key of Object.keys(dataset)){
+                for(const key of Object.keys(dataset)){
                     newElement.dataset[key] = dataset[key]
                 }
                 newElement.type = 'opt-in'
@@ -199,7 +199,7 @@ export default class ConsentManager {
             } else {
                 // all other elements (images etc.) are modified in place...
                 if (consent){
-                    for(var attr of attrs){
+                    for(const attr of attrs){
                         const attrValue = dataset[attr]
                         if (attrValue === undefined)
                             continue
@@ -220,7 +220,7 @@ export default class ConsentManager {
                             dataset.originalDisplay = element.style.display
                         element.style.display = 'none'
                     }
-                    for(var attr of attrs){
+                    for(const attr of attrs){
                         const attrValue = dataset[attr]
                         if (attrValue === undefined)
                             continue
@@ -229,8 +229,8 @@ export default class ConsentManager {
                     }
                 }
             }
-         }
-        
+        }
+
     }
 
     updateAppCookies(app, consent){
@@ -239,12 +239,12 @@ export default class ConsentManager {
             return
 
         function escapeRegexStr(str) {
-            return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+            return str.replace(/[-[\]/{}()*+?.\\^$|]/g, "\\$&");
         }
 
         if (app.cookies !== undefined && app.cookies.length > 0){
             const cookies = getCookies()
-            for(var i=0;i<app.cookies.length;i++){
+            for(let i=0;i<app.cookies.length;i++){
                 let cookiePattern = app.cookies[i]
                 let cookiePath, cookieDomain
                 if (cookiePattern instanceof Array){
@@ -253,14 +253,15 @@ export default class ConsentManager {
                 if (!(cookiePattern instanceof RegExp)){
                     cookiePattern = new RegExp('^'+escapeRegexStr(cookiePattern)+'$')
                 }
-                for(var j=0;j<cookies.length;j++){
+                for(let j=0;j<cookies.length;j++){
                     const cookie = cookies[j]
                     const match = cookiePattern.exec(cookie.name)
                     if (match !== null){
+                        // eslint-disable-next-line no-console
                         console.debug("Deleting cookie:", cookie.name,
-                                      "Matched pattern:", cookiePattern,
-                                      "Path:", cookiePath,
-                                      "Domain:", cookieDomain)
+                            "Matched pattern:", cookiePattern,
+                            "Path:", cookiePath,
+                            "Domain:", cookieDomain)
                         deleteCookie(cookie.name, cookiePath, cookieDomain)
                     }
                 }
@@ -268,5 +269,5 @@ export default class ConsentManager {
         }
 
     }
-    
+
 }
