@@ -1,9 +1,17 @@
-import {getCookie, getCookies, setCookie, deleteCookie} from 'utils/cookies'
+import {getCookies, deleteCookie} from 'utils/cookies'
+import stores from 'stores'
 
 export default class ConsentManager {
 
     constructor(config){
         this.config = config // the configuration
+
+        this.store = new stores[this.storageMethod](this)
+
+        // we fall back to the cookie-based store if the store is undefined
+        if (this.store === undefined)
+            this.store = stores['cookie']
+
         this.consents = this.defaultConsents // the consent states of the configured apps
         this.confirmed = false // true if the user actively confirmed his/her consent
         this.changed = false // true if the app config changed compared to the cookie
@@ -12,10 +20,23 @@ export default class ConsentManager {
         this.watchers = new Set([])
         this.loadConsents()
         this.applyConsents()
+        this.savedConsents = {...this.consents}
+    }
+
+    get storageMethod(){
+        return this.config.storageMethod || 'cookie'
     }
 
     get cookieName(){
         return this.config.cookieName || 'klaro'
+    }
+
+    get cookieDomain(){
+        return this.config.cookieDomain || undefined
+    }
+
+    get cookieExpiresAfterDays(){
+        return this.config.cookieExpiresAfterDays || 120
     }
 
     watch(watcher){
@@ -60,9 +81,9 @@ export default class ConsentManager {
     }
 
     //don't decline required apps
-    declineAll(){
+    changeAll(value){
         this.config.apps.map((app) => {
-            if(app.required || this.config.required) {
+            if(app.required || this.config.required || value) {
                 this.updateConsent(app.name, true)
             } else {
                 this.updateConsent(app.name, false)
@@ -75,11 +96,16 @@ export default class ConsentManager {
         this.notify('consents', this.consents)
     }
 
+    restoreSavedConsents(){
+        this.consents = {...this.savedConsents}
+        this.notify('consents', this.consents)
+    }
+
     resetConsent(){
         this.consents = this.defaultConsents
         this.confirmed = false
         this.applyConsents()
-        deleteCookie(this.cookieName)
+        this.store.delete()
         this.notify('consents', this.consents)
     }
 
@@ -108,9 +134,9 @@ export default class ConsentManager {
     }
 
     loadConsents(){
-        const consentCookie = getCookie(this.cookieName)
-        if (consentCookie !== null){
-            this.consents = JSON.parse(consentCookie.value)
+        const consentData = this.store.get();
+        if (consentData !== null){
+            this.consents = JSON.parse(decodeURIComponent(consentData))
             this._checkConsents()
             this.notify('consents', this.consents)
         }
@@ -123,12 +149,11 @@ export default class ConsentManager {
     }
 
     saveConsents(){
-        if (this.consents === null)
-            deleteCookie(this.cookieName)
-        const v = JSON.stringify(this.consents)
-        setCookie(this.cookieName, v, this.config.cookieExpiresAfterDays || 120)
+        const v = encodeURIComponent(JSON.stringify(this.consents))
+        this.store.set(v);
         this.confirmed = true
         this.changed = false
+        this.savedConsents = {...this.consents}
     }
 
     applyConsents(){
@@ -178,7 +203,7 @@ export default class ConsentManager {
                 for(const key of Object.keys(dataset)){
                     newElement.dataset[key] = dataset[key]
                 }
-                newElement.type = 'opt-in'
+                newElement.type = 'text/plain'
                 newElement.innerText = element.innerText
                 newElement.text = element.text
                 newElement.class = element.class

@@ -1,11 +1,19 @@
 import React from 'react'
 import {Close} from './icons'
 import Apps from './apps'
+import {language} from 'utils/i18n'
 
 export default class ConsentModal extends React.Component {
 
+    constructor(props){
+        super(props)
+        const {manager} = props
+        manager.restoreSavedConsents()
+    }
+
     render(){
-        const {hide, saveAndHide, config, manager, t} = this.props
+        const {hide, confirming, saveAndHide, acceptAndHide, declineAndHide, config, manager, t} = this.props
+        const lang = config.lang || language()
 
         let closeLink
         if (!config.mustConsent) {
@@ -18,8 +26,22 @@ export default class ConsentModal extends React.Component {
                 <Close t={t} />
             </button>
         }
+        let declineButton
 
-        const ppLink = <a onClick={hide} href={config.privacyPolicy}>{t(['consentModal','privacyPolicy','name'])}</a>
+        if (!config.hideDeclineAll && ! manager.confirmed)
+            declineButton = <button disabled={confirming} className="cm-btn cm-btn-decline cm-btn-right cm-btn-sm cm-btn-danger cn-decline" type="button" onClick={declineAndHide}>{t(['decline'])}</button>
+        let acceptAllButton
+        const acceptButton =
+            <button disabled={confirming} className="cm-btn cm-btn-success cm-btn-info cm-btn-accept" type="button" onClick={saveAndHide}>{t([manager.confirmed ? 'save' : 'acceptSelected'])}</button>
+        if (config.acceptAll && !manager.confirmed) {
+            acceptAllButton = <button disabled={confirming} className="cm-btn cm-btn-success cm-btn-accept-all" type="button" onClick={acceptAndHide}>{t(['acceptAll'])}</button>
+        }
+
+        const ppUrl = (config.privacyPolicy && config.privacyPolicy[lang]) ||
+            config.privacyPolicy.default ||
+            config.privacyPolicy
+
+        const ppLink = <a onClick={hide} href={ppUrl}>{t(['consentModal','privacyPolicy','name'])}</a>
         return <div className="cookie-modal">
             <div className="cm-bg" onClick={hide}/>
             <div className="cm-modal">
@@ -35,8 +57,12 @@ export default class ConsentModal extends React.Component {
                     <Apps t={t} config={config} manager={manager} />
                 </div>
                 <div className="cm-footer">
-                    <button className="cm-btn cm-btn-success" type="button" onClick={saveAndHide}>{t([manager.confirmed ? 'close' : 'save'])}</button>
-                    <a target="_blank" rel="noopener noreferrer" className="cm-powered-by" href={config.poweredBy || 'https://klaro.kiprotect.com'}>{t(['poweredBy'])}</a>
+                    <div className="cm-footer-buttons">
+                        {acceptAllButton}
+                        {acceptButton}
+                        {declineButton}
+                    </div>
+                    <p className="cm-powered-by"><a target="_blank" href={config.poweredBy || 'https://klaro.kiprotect.com'} rel="noopener noreferrer">{t(['poweredBy'])}</a></p>
                 </div>
             </div>
         </div>
