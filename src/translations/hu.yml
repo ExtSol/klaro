@@ -15,6 +15,8 @@ ok: Elfogad
 save: Save
 decline: Mentés
 close: Elvet
+acceptAll: Accept all
+acceptSelected: Accept selected
 app:
   disableAll:
     title: Összes app átkapcsolása

@@ -16,6 +16,7 @@ save: Speichern
 decline: Ablehnen
 close: Schließen
 acceptAll: Allen zustimmen
+acceptSelected: Accept selected
 app:
   disableAll:
     title: Alle Anwendungen aktivieren/deaktivieren
