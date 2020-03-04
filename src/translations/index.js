@@ -16,7 +16,7 @@ import no from './no.yml'
 import ro from './ro.yml'
 import sr from './sr.yml'
 import sr_cyrl from './sr_cyrl.yml'
-import sv from './sv.yml'
+import sv from './se.yml'
 import tr from './tr.yml'
 import pl from './pl.yml'
 
@@ -36,7 +36,7 @@ export default {
     ro,
     sr,
     sr_cyrl,
-    sv,
+    se,
     tr,
     pl,
 }
